@@ -4,9 +4,9 @@
 
 
     <BitmapImage x:Key="RivenBackGround" UriSource="/Static/riven.jpg"/>
-    <BitmapImage x:Key="ThreshBackGround" UriSource="/Static/riven.jpg"/>
-    <BitmapImage x:Key="HecarimBackGround" UriSource="/Static/riven.jpg"/>
-    <BitmapImage x:Key="YorickBackGround" UriSource="/Static/riven.jpg"/>
-    <BitmapImage x:Key="BeastSlayerBackGround" UriSource="/Static/riven.jpg"/>
+    <BitmapImage x:Key="ThreshBackGround" UriSource="/Static/thresh.jpg"/>
+    <BitmapImage x:Key="HecarimBackGround" UriSource="/Static/hecarim.jpg"/>
+    <BitmapImage x:Key="YorickBackGround" UriSource="/Static/yorick.jpg"/>
+    <BitmapImage x:Key="BeastSlayerBackGround" UriSource="/Static/beastslayer.jpg"/>
     
 </ResourceDictionary>
