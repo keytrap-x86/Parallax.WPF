@@ -1,0 +1,12 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Parallax.WPF.Demo.Static">
+
+
+    <BitmapImage x:Key="RivenBackGround" UriSource="/Static/riven.jpg"/>
+    <BitmapImage x:Key="ThreshBackGround" UriSource="/Static/riven.jpg"/>
+    <BitmapImage x:Key="HecarimBackGround" UriSource="/Static/riven.jpg"/>
+    <BitmapImage x:Key="YorickBackGround" UriSource="/Static/riven.jpg"/>
+    <BitmapImage x:Key="BeastSlayerBackGround" UriSource="/Static/riven.jpg"/>
+    
+</ResourceDictionary>

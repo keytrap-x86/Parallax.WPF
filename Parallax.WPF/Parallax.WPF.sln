@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.572
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parallax.WPF", "Parallax.WPF\Parallax.WPF.csproj", "{7530E693-440D-4681-819B-4333A2256377}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parallax.WPF.Demo", "Parallax.WPF.Demo\Parallax.WPF.Demo.csproj", "{BBD0D375-D27E-4575-B9EB-22178151A69C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7530E693-440D-4681-819B-4333A2256377}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7530E693-440D-4681-819B-4333A2256377}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7530E693-440D-4681-819B-4333A2256377}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7530E693-440D-4681-819B-4333A2256377}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBD0D375-D27E-4575-B9EB-22178151A69C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBD0D375-D27E-4575-B9EB-22178151A69C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBD0D375-D27E-4575-B9EB-22178151A69C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBD0D375-D27E-4575-B9EB-22178151A69C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {22495195-D40B-4C89-A51C-E9B8211CE785}
+	EndGlobalSection
+EndGlobal
