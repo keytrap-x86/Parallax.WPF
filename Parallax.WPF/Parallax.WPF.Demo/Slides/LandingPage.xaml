@@ -16,7 +16,7 @@
             parallax:ParallaxEffect.IsBackground="True" 
             parallax:ParallaxEffect.Parent="{Binding  ElementName=masterPage}"    
             parallax:ParallaxEffect.XOffset="120" parallax:ParallaxEffect.YOffset="120"             
-            Source="/Static/Riven.jpg" Stretch="UniformToFill" Margin="-20">
+            Source="{StaticResource RivenBackGround}" Stretch="UniformToFill" Margin="-20">
             <I:Interaction.Behaviors>
                 <parallax:ParallaxEffect/>
             </I:Interaction.Behaviors>
