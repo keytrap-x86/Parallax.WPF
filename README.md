@@ -27,5 +27,4 @@ xmlns:parallax="clr-namespace:Parallax.WPF;assembly=Parallax.WPF"
 
 ## Demo 
 
-![](https://i.imgur.com/Ikm9vrF.gif)
-
+[](https://imgur.com/I0w9ZsT)
