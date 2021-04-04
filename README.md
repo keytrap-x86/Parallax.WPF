@@ -1,9 +1,13 @@
 # Parallax.WPF
 Parallax Effect for WPF
-## Forked from https://github.com/Pyrathlon/Parallax.WPF (added Nuget package)
+
+## This is a fork from https://github.com/Pyrathlon/Parallax.WPF where I added a Nuget package
 
 # Install with Nuget
-`Install-Package Parallax.WPF`
+
+```Powershell
+Install-Package Parallax.WPF
+```
 
 # After you installed Parallax.WPF
 * Add reference : 
@@ -11,6 +15,7 @@ Parallax Effect for WPF
 xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
 xmlns:parallax="clr-namespace:Parallax.WPF;assembly=Parallax.WPF"
 ```
+
 * Use the effect like this :
 ```XAML
 <Image Source="Images/Backgrounds/cosmo_bg.PNG" Margin="-30" Stretch="UniformToFill"
@@ -27,4 +32,4 @@ xmlns:parallax="clr-namespace:Parallax.WPF;assembly=Parallax.WPF"
 
 ## Demo 
 
-[https://imgur.com/I0w9ZsT](https://imgur.com/I0w9ZsT)
+`![](https://i.imgur.com/I0w9ZsT.mp4)
