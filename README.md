@@ -32,4 +32,7 @@ xmlns:parallax="clr-namespace:Parallax.WPF;assembly=Parallax.WPF"
 
 ## Demo 
 
-![https://i.imgur.com/I0w9ZsT.mp4](https://i.imgur.com/I0w9ZsT.mp4)
+
+https://user-images.githubusercontent.com/17864005/113509902-49a2d180-9558-11eb-9ebf-711a2ea33e2a.mp4
+
+
