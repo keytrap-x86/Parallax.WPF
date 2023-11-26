@@ -5,8 +5,7 @@
 		<TargetFramework>netcoreapp3.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
-		
-
+		<LangVersion>10</LangVersion>
 
 	</PropertyGroup>
 	<ItemGroup>
