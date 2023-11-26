@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xaml.Behaviors;
 
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -11,18 +12,7 @@ public class ParallaxEffect : Behavior<FrameworkElement>
 {
     #region Dependency
 
-    public static readonly DependencyProperty UseParallaxProperty = DependencyProperty.RegisterAttached("UseParallax", typeof(bool), typeof(ParallaxEffect), new PropertyMetadata(false));
     public static readonly DependencyProperty ParentProperty = DependencyProperty.RegisterAttached("Parent", typeof(UIElement), typeof(ParallaxEffect), new PropertyMetadata(null));
-    public static readonly DependencyProperty IsBackgroundProperty = DependencyProperty.RegisterAttached("IsBackground", typeof(bool), typeof(ParallaxEffect), new PropertyMetadata(false));
-
-    public static bool GetUseParallax(DependencyObject obj) => (bool)obj.GetValue(UseParallaxProperty);
-
-    public static void SetUseParallax(DependencyObject obj, bool value) => obj.SetValue(UseParallaxProperty, value);
-
-    public static bool GetIsBackground(DependencyObject obj) => (bool)obj.GetValue(IsBackgroundProperty);
-
-    public static void SetIsBackground(DependencyObject obj, bool value) => obj.SetValue(IsBackgroundProperty, value);
-
     public static UIElement GetParent(DependencyObject obj) => (UIElement)obj.GetValue(ParentProperty);
 
     public static void SetParent(DependencyObject obj, UIElement value) => obj.SetValue(ParentProperty, value);
@@ -43,7 +33,6 @@ public class ParallaxEffect : Behavior<FrameworkElement>
 
     #endregion Dependency
 
-
     private IDisposable _disposable;
 
     protected override void OnAttached()
@@ -52,24 +41,51 @@ public class ParallaxEffect : Behavior<FrameworkElement>
 
         _disposable?.Dispose();
 
-        if (!GetIsBackground(AssociatedObject))
+        var parent = GetParent(AssociatedObject);
+        if (parent != null)
         {
-            AssociatedObject.MouseMove += MouseMoveHandler;
-            _disposable = new ActionDisposable(() =>
-            {
-                AssociatedObject.MouseMove -= MouseMoveHandler;
-            });
-        }
-        else
-        {
-            var parent = GetParent(AssociatedObject);
             parent.MouseMove += MouseMoveHandler;
-
             _disposable = new ActionDisposable(() =>
             {
                 parent.MouseMove -= MouseMoveHandler;
             });
+            return;
         }
+
+        UIElement bestParent = GetBestUiParent();
+        if (bestParent == null)
+        {
+            return;
+        }
+
+        bestParent.MouseMove += MouseMoveHandler;
+        _disposable = new ActionDisposable(() =>
+        {
+            bestParent.MouseMove -= MouseMoveHandler;
+        });
+    }
+
+    private UIElement GetBestUiParent()
+    {
+        var result = AssociatedObject.GetVisualParents()
+            .OfType<UIElement>()
+            .LastOrDefault();
+
+        if (result != null)
+        {
+            return result;
+        }
+
+        result = AssociatedObject.GetLogicalParents()
+            .OfType<UIElement>()
+            .LastOrDefault();
+
+        if (result != null)
+        {
+            return result;
+        }
+
+        return AssociatedObject;
     }
 
     private void OnLoaded()
@@ -89,7 +105,7 @@ public class ParallaxEffect : Behavior<FrameworkElement>
         });
     }
 
-    protected override void OnDetaching() 
+    protected override void OnDetaching()
         => _disposable?.Dispose();
 
     private void MouseMoveHandler(object sender, MouseEventArgs e)

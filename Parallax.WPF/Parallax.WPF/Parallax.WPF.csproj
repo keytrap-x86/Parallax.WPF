@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<!--<TargetFramework>net5.0-windows</TargetFramework>-->
+		<TargetFrameworks>netcoreapp3.0;net4.7</TargetFrameworks>
 		<TargetFramework>netcoreapp3.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<UseWPF>true</UseWPF>
