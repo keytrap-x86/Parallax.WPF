@@ -1,10 +1,13 @@
 ﻿using Microsoft.Xaml.Behaviors;
 
 using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Parallax.WPF;
 
@@ -13,6 +16,7 @@ public class ParallaxEffect : Behavior<FrameworkElement>
     #region Dependency
 
     public static readonly DependencyProperty ParentProperty = DependencyProperty.RegisterAttached("Parent", typeof(UIElement), typeof(ParallaxEffect), new PropertyMetadata(null));
+
     public static UIElement GetParent(DependencyObject obj) => (UIElement)obj.GetValue(ParentProperty);
 
     public static void SetParent(DependencyObject obj, UIElement value) => obj.SetValue(ParentProperty, value);
@@ -39,17 +43,10 @@ public class ParallaxEffect : Behavior<FrameworkElement>
     {
         AssociatedObject.Loaded += (a, b) => OnLoaded();
 
-        _disposable?.Dispose();
-
         var parent = GetParent(AssociatedObject);
         if (parent != null)
         {
-            parent.MouseMove += MouseMoveHandler;
-            _disposable = new ActionDisposable(() =>
-            {
-                parent.MouseMove -= MouseMoveHandler;
-            });
-            return;
+            AttachToParent(parent);
         }
 
         UIElement bestParent = GetBestUiParent();
@@ -58,10 +55,22 @@ public class ParallaxEffect : Behavior<FrameworkElement>
             return;
         }
 
-        bestParent.MouseMove += MouseMoveHandler;
+        AttachToParent(bestParent);
+    }
+
+    private void AttachToParent(UIElement parent)
+    {
+        _disposable?.Dispose();
+
+        parent.MouseMove += MouseMoveHandler;
+        parent.MouseLeave += MouseLeaveHandler;
+        parent.MouseEnter += MouseEnterHandler;
+
         _disposable = new ActionDisposable(() =>
         {
-            bestParent.MouseMove -= MouseMoveHandler;
+            parent.MouseMove -= MouseMoveHandler;
+            parent.MouseLeave -= MouseLeaveHandler;
+            parent.MouseEnter -= MouseEnterHandler;
         });
     }
 
@@ -96,46 +105,98 @@ public class ParallaxEffect : Behavior<FrameworkElement>
             return;
         }
 
-        _disposable?.Dispose();
-
-        wnd.MouseMove += MouseMoveHandler;
-        _disposable = new ActionDisposable(() =>
-        {
-            wnd.MouseMove -= MouseMoveHandler;
-        });
+        AttachToParent(wnd);
     }
 
     protected override void OnDetaching()
         => _disposable?.Dispose();
 
+    private async void MouseLeaveHandler(object sender, MouseEventArgs e)
+    {
+        // Transform back to original position
+        if (AssociatedObject.RenderTransform is not TranslateTransform transform)
+        {
+            return;
+        }
+
+        var duration = TimeSpan.FromMilliseconds(500);
+        var animation = new DoubleAnimation(0, duration);
+        transform.BeginAnimation(TranslateTransform.XProperty, animation);
+        transform.BeginAnimation(TranslateTransform.YProperty, animation);
+
+        await Task.Delay(duration);
+
+        transform.BeginAnimation(TranslateTransform.XProperty, null);
+        transform.BeginAnimation(TranslateTransform.YProperty, null);
+
+        transform.X = 0;
+        transform.Y = 0;
+    }
+
+    private void MouseEnterHandler(object sender, MouseEventArgs e)
+    {
+        var mouse = e.GetPosition(AssociatedObject);
+        var duration = TimeSpan.FromMilliseconds(200);
+
+        TransformToMousePosition(mouse, duration);
+    }
+
     private void MouseMoveHandler(object sender, MouseEventArgs e)
-        => HandleMousePosition(e.GetPosition(AssociatedObject));
+    {
+        //HandleMousePosition(e.GetPosition(AssociatedObject));
+        TransformToMousePosition(e.GetPosition(AssociatedObject));
+    }
 
     private Point GetOffset(DependencyObject obj)
         => new Point(GetXOffset(obj), GetYOffset(obj));
 
-    private void HandleMousePosition(Point mouse)
+    private Point GetNewPoint(Point mouse, Point offset)
     {
-        var offset = GetOffset(AssociatedObject);
         double newX = AssociatedObject.ActualHeight - (mouse.X / offset.X) - AssociatedObject.ActualHeight;
         double newY = AssociatedObject.ActualWidth - (mouse.Y / offset.Y) - AssociatedObject.ActualWidth;
+        return new Point(newX, newY);
+    }
 
+    private TranslateTransform GetTransform()
+    {
         if (AssociatedObject.RenderTransform is not TranslateTransform transform)
         {
-            transform = new TranslateTransform(newX, newY);
+            transform = new TranslateTransform();
             AssociatedObject.RenderTransform = transform;
         }
 
-        // Animate X if needed
-        if (offset.X > 0)
+        return transform;
+    }
+
+    private async void TransformToMousePosition(Point mouse, TimeSpan? duration = null)
+    {
+        var offset = GetOffset(AssociatedObject);
+        var newPoint = GetNewPoint(mouse, offset);
+
+        var transform = GetTransform();
+
+        if (duration.HasValue)
         {
-            transform.X = newX;
+            var animation = new DoubleAnimation(newPoint.X, duration.Value);
+            transform.BeginAnimation(TranslateTransform.XProperty, animation);
+
+            animation = new DoubleAnimation(newPoint.Y, duration.Value);
+            transform.BeginAnimation(TranslateTransform.YProperty, animation);
+
+            await Task.Delay(duration.Value);
+
+            transform.BeginAnimation(TranslateTransform.XProperty, null);
+            transform.BeginAnimation(TranslateTransform.YProperty, null);
+        }
+        else
+        {
+            if (transform.HasAnimatedProperties)
+            {
+                return;
+            }
         }
 
-        // Animate Y if needed
-        if (offset.Y > 0)
-        {
-            transform.Y = newY;
-        }
+        transform.X = newPoint.X;
+        transform.Y = newPoint.Y;
     }
 }
