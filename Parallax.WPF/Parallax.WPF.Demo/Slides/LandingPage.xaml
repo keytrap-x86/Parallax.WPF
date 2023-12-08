@@ -106,7 +106,14 @@
                 <I:Interaction.Behaviors>
                     <parallax:ParallaxEffect/>
                 </I:Interaction.Behaviors>
-                <TextBlock  Foreground="White" FontFamily="Segoe UI Light" FontSize="36"><Run Text="Hello, and welcome"/><LineBreak/><Run Text="to Parallax Effect for "/><Run FontFamily="Segoe UI Semibold" Text="WPF"/><LineBreak/><Run Text=""/><LineBreak/><Run Text="Fell free to try the samples!"/><LineBreak/></TextBlock>
+                <TextBlock  Foreground="White" FontFamily="Segoe UI Light" FontSize="36">
+                    <Run Text="Hello, and welcome"/>
+                    <LineBreak/><Run Text="to Parallax Effect for "/>
+                    <Run FontFamily="Segoe UI Semibold" Text="WPF"/>
+                    <LineBreak/><Run Text=""/><LineBreak/>
+                    <Run Text="Fell free to try the samples!"/>
+                    <LineBreak/>
+                </TextBlock>
             </Grid>
 
             <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Next" Foreground="White" BorderBrush="{x:Null}" Background="#CC4B0082" Margin="50,0,50,20" Height="40" FontSize="22" FontFamily="Segoe UI Semibold" />

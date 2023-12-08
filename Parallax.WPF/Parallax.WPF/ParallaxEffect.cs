@@ -1,88 +1,202 @@
 ﻿using Microsoft.Xaml.Behaviors;
+
 using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
-namespace Parallax.WPF
+namespace Parallax.WPF;
+
+public class ParallaxEffect : Behavior<FrameworkElement>
 {
-    public class ParallaxEffect : Behavior<FrameworkElement>
+    #region Dependency
+
+    public static readonly DependencyProperty ParentProperty = DependencyProperty.RegisterAttached("Parent", typeof(UIElement), typeof(ParallaxEffect), new PropertyMetadata(null));
+
+    public static UIElement GetParent(DependencyObject obj) => (UIElement)obj.GetValue(ParentProperty);
+
+    public static void SetParent(DependencyObject obj, UIElement value) => obj.SetValue(ParentProperty, value);
+
+    public static readonly DependencyProperty XOffsetProperty
+        = DependencyProperty.RegisterAttached("XOffset", typeof(int), typeof(ParallaxEffect), new PropertyMetadata(120));
+
+    public static readonly DependencyProperty YOffsetProperty
+        = DependencyProperty.RegisterAttached("YOffset", typeof(int), typeof(ParallaxEffect), new PropertyMetadata(120));
+
+    public static int GetXOffset(DependencyObject obj) => (int)obj.GetValue(XOffsetProperty);
+
+    public static void SetXOffset(DependencyObject obj, int value) => obj.SetValue(XOffsetProperty, value);
+
+    public static int GetYOffset(DependencyObject obj) => (int)obj.GetValue(YOffsetProperty);
+
+    public static void SetYOffset(DependencyObject obj, int value) => obj.SetValue(YOffsetProperty, value);
+
+    #endregion Dependency
+
+    private IDisposable _disposable;
+
+    protected override void OnAttached()
     {
-        #region Dependency
-        public static readonly DependencyProperty UseParallaxProperty = DependencyProperty.RegisterAttached("UseParallax", typeof(bool), typeof(ParallaxEffect), new PropertyMetadata(false));
-        public static readonly DependencyProperty ParentProperty = DependencyProperty.RegisterAttached("Parent", typeof(UIElement), typeof(ParallaxEffect), new PropertyMetadata(null));
-        public static readonly DependencyProperty IsBackgroundProperty = DependencyProperty.RegisterAttached("IsBackground", typeof(bool), typeof(ParallaxEffect), new PropertyMetadata(false));
+        AssociatedObject.Loaded += (a, b) => OnLoaded();
 
-        public static bool GetUseParallax(DependencyObject obj) => (bool)obj.GetValue(UseParallaxProperty);
-        public static void SetUseParallax(DependencyObject obj, bool value) => obj.SetValue(UseParallaxProperty, value);
-        public static bool GetIsBackground(DependencyObject obj) => (bool)obj.GetValue(IsBackgroundProperty);
-        public static void SetIsBackground(DependencyObject obj, bool value) => obj.SetValue(IsBackgroundProperty, value);
-        public static UIElement GetParent(DependencyObject obj) => (UIElement)obj.GetValue(ParentProperty);
-        public static void SetParent(DependencyObject obj, UIElement value) => obj.SetValue(ParentProperty, value);
-        public static readonly DependencyProperty XOffsetProperty = DependencyProperty.RegisterAttached("XOffset", typeof(int), typeof(ParallaxEffect), new PropertyMetadata(120));
-        public static readonly DependencyProperty YOffsetProperty = DependencyProperty.RegisterAttached("YOffset", typeof(int), typeof(ParallaxEffect), new PropertyMetadata(120));
-
-        public static int GetXOffset(DependencyObject obj) => (int)obj.GetValue(XOffsetProperty);
-        public static void SetXOffset(DependencyObject obj, int value) => obj.SetValue(XOffsetProperty, value);
-        public static int GetYOffset(DependencyObject obj) => (int)obj.GetValue(YOffsetProperty);
-        public static void SetYOffset(DependencyObject obj, int value) => obj.SetValue(YOffsetProperty, value);
-        #endregion
-
-
-        protected override void OnAttached()
+        var parent = GetParent(AssociatedObject);
+        if (parent != null)
         {
-            if (!GetIsBackground(AssociatedObject))
-            {
-                AssociatedObject.MouseMove += MouseMoveHandler;
-            }
-            else
-            {
-                GetParent(AssociatedObject).MouseMove += MouseMoveHandler;
-            }
-
-
+            AttachToParent(parent);
         }
 
-        protected override void OnDetaching()
+        UIElement bestParent = GetBestUiParent();
+        if (bestParent == null)
         {
-            if (!GetIsBackground(AssociatedObject))
+            return;
+        }
+
+        AttachToParent(bestParent);
+    }
+
+    private void AttachToParent(UIElement parent)
+    {
+        _disposable?.Dispose();
+
+        parent.MouseMove += MouseMoveHandler;
+        parent.MouseLeave += MouseLeaveHandler;
+        parent.MouseEnter += MouseEnterHandler;
+
+        _disposable = new ActionDisposable(() =>
+        {
+            parent.MouseMove -= MouseMoveHandler;
+            parent.MouseLeave -= MouseLeaveHandler;
+            parent.MouseEnter -= MouseEnterHandler;
+        });
+    }
+
+    private UIElement GetBestUiParent()
+    {
+        var result = AssociatedObject.GetVisualParents()
+            .OfType<UIElement>()
+            .LastOrDefault();
+
+        if (result != null)
+        {
+            return result;
+        }
+
+        result = AssociatedObject.GetLogicalParents()
+            .OfType<UIElement>()
+            .LastOrDefault();
+
+        if (result != null)
+        {
+            return result;
+        }
+
+        return AssociatedObject;
+    }
+
+    private void OnLoaded()
+    {
+        var wnd = TreeWalker.GetWindowFromElement(AssociatedObject);
+        if (wnd == null)
+        {
+            return;
+        }
+
+        AttachToParent(wnd);
+    }
+
+    protected override void OnDetaching()
+        => _disposable?.Dispose();
+
+    private async void MouseLeaveHandler(object sender, MouseEventArgs e)
+    {
+        // Transform back to original position
+        if (AssociatedObject.RenderTransform is not TranslateTransform transform)
+        {
+            return;
+        }
+
+        var duration = TimeSpan.FromMilliseconds(500);
+        var animation = new DoubleAnimation(0, duration);
+        transform.BeginAnimation(TranslateTransform.XProperty, animation);
+        transform.BeginAnimation(TranslateTransform.YProperty, animation);
+
+        await Task.Delay(duration);
+
+        transform.BeginAnimation(TranslateTransform.XProperty, null);
+        transform.BeginAnimation(TranslateTransform.YProperty, null);
+
+        transform.X = 0;
+        transform.Y = 0;
+    }
+
+    private void MouseEnterHandler(object sender, MouseEventArgs e)
+    {
+        var mouse = e.GetPosition(AssociatedObject);
+        var duration = TimeSpan.FromMilliseconds(200);
+
+        TransformToMousePosition(mouse, duration);
+    }
+
+    private void MouseMoveHandler(object sender, MouseEventArgs e)
+    {
+        //HandleMousePosition(e.GetPosition(AssociatedObject));
+        TransformToMousePosition(e.GetPosition(AssociatedObject));
+    }
+
+    private Point GetOffset(DependencyObject obj)
+        => new Point(GetXOffset(obj), GetYOffset(obj));
+
+    private Point GetNewPoint(Point mouse, Point offset)
+    {
+        double newX = AssociatedObject.ActualHeight - (mouse.X / offset.X) - AssociatedObject.ActualHeight;
+        double newY = AssociatedObject.ActualWidth - (mouse.Y / offset.Y) - AssociatedObject.ActualWidth;
+        return new Point(newX, newY);
+    }
+
+    private TranslateTransform GetTransform()
+    {
+        if (AssociatedObject.RenderTransform is not TranslateTransform transform)
+        {
+            transform = new TranslateTransform();
+            AssociatedObject.RenderTransform = transform;
+        }
+
+        return transform;
+    }
+
+    private async void TransformToMousePosition(Point mouse, TimeSpan? duration = null)
+    {
+        var offset = GetOffset(AssociatedObject);
+        var newPoint = GetNewPoint(mouse, offset);
+
+        var transform = GetTransform();
+
+        if (duration.HasValue)
+        {
+            var animation = new DoubleAnimation(newPoint.X, duration.Value);
+            transform.BeginAnimation(TranslateTransform.XProperty, animation);
+
+            animation = new DoubleAnimation(newPoint.Y, duration.Value);
+            transform.BeginAnimation(TranslateTransform.YProperty, animation);
+
+            await Task.Delay(duration.Value);
+
+            transform.BeginAnimation(TranslateTransform.XProperty, null);
+            transform.BeginAnimation(TranslateTransform.YProperty, null);
+        }
+        else
+        {
+            if (transform.HasAnimatedProperties)
             {
-                AssociatedObject.MouseMove -= MouseMoveHandler;
-            }
-            else
-            {
-                GetParent(AssociatedObject).MouseMove -= MouseMoveHandler;
+                return;
             }
         }
 
-        private void MouseMoveHandler(object sender, MouseEventArgs e)
-        {
-            var mouse = e.GetPosition(AssociatedObject);
-
-
-
-
-            int xoffset = GetXOffset(AssociatedObject);
-            int yoffset = GetYOffset(AssociatedObject);
-
-            double newX = AssociatedObject.ActualHeight - ((mouse.X / xoffset)) - AssociatedObject.ActualHeight;
-            double newY = AssociatedObject.ActualWidth - ((mouse.Y / yoffset)) - AssociatedObject.ActualWidth;
-
-            if (!(AssociatedObject.RenderTransform is TranslateTransform))
-                AssociatedObject.RenderTransform = new TranslateTransform(newX, newY);
-            else
-            {
-                TranslateTransform transform = (TranslateTransform)AssociatedObject.RenderTransform;
-                if (xoffset > 0)
-                    transform.X = newX;
-                if (yoffset > 0)
-                    transform.Y = newY;
-
-            }
-        }
+        transform.X = newPoint.X;
+        transform.Y = newPoint.Y;
     }
 }
